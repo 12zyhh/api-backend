@@ -21,6 +21,7 @@ import org.springframework.stereotype.Service;
 import javax.servlet.http.HttpServletRequest;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 import java.util.regex.Pattern;
@@ -41,46 +42,121 @@ public class InterfaceInfoServiceImpl extends ServiceImpl<InterfaceInfoMapper, I
      * @param interfaceInfo
      * @param add
      */
+//    @Override
+//    public void validInterfaceInfo(InterfaceInfo interfaceInfo, boolean add) {
+//
+//        if (null == interfaceInfo) {
+//            throw new BusinessException(ErrorCode.PARAMS_ERROR);
+//        }
+//        // 第一次添加,校验参数是否参数非空
+//        if (add) {
+//            Field[] declaredFields = interfaceInfo.getClass().getDeclaredFields();
+//            for (Field field : declaredFields) {
+//                String fieldName = field.getName();
+//                if (shouldIgnoreField(fieldName)) {
+//                    continue;
+//                }
+//                field.setAccessible(true); // 允许访问
+//                try {
+//                    Object value = field.get(interfaceInfo);
+//                    if (null == value || value instanceof String && StringUtils.isAnyBlank((String) value)) {
+//                        throw new BusinessException(ErrorCode.PARAMS_ERROR, fieldName + "不能为空");
+//                    }
+//                    // 非空之后，判断特殊参数规则
+//                    if ("name".equals(fieldName) && value.toString().length() > InterfaceInfoConstant.MAX_NAME_LENGTH) {
+//                        throw new BusinessException(ErrorCode.PARAMS_ERROR, "接口名称过长");
+//                    }
+//                    if ("url".equals(fieldName)) {
+//                        Pattern pattern = Pattern.compile(InterfaceInfoConstant.URL_REGEX);
+//                        if (!pattern.matcher((String) value).matches()) {
+//                            throw new BusinessException(ErrorCode.PARAMS_ERROR, "接口地址不正确");
+//                        }
+//                    }
+//                    if ("method".equals(fieldName) && !InterfaceInfoConstant.ALLOW_METHODS.contains((String) value)) {
+//                        throw new BusinessException(ErrorCode.PARAMS_ERROR, "请求类型不正确");
+//                    }
+//                } catch (IllegalAccessException e) {
+//                    throw new BusinessException(ErrorCode.SYSTEM_ERROR, "访问权限异常" + e.getMessage());
+//                }
+//            }
+//        } else {
+//            // 更新 参数校验
+//            if (StringUtils.isNotEmpty(interfaceInfo.getName()) && interfaceInfo.getName().length() > InterfaceInfoConstant.MAX_NAME_LENGTH) {
+//                throw new BusinessException(ErrorCode.PARAMS_ERROR, "接口名称过长");
+//            }
+//            if (StringUtils.isNotEmpty(interfaceInfo.getUrl())) {
+//                Pattern pattern = Pattern.compile(InterfaceInfoConstant.URL_REGEX);
+//                if (!pattern.matcher(interfaceInfo.getUrl()).matches()) {
+//                    throw new BusinessException(ErrorCode.PARAMS_ERROR, "接口地址不正确");
+//                }
+//            }
+//            if (StringUtils.isNotEmpty(interfaceInfo.getMethod()) && !InterfaceInfoConstant.ALLOW_METHODS.contains(interfaceInfo.getMethod())) {
+//                throw new BusinessException(ErrorCode.PARAMS_ERROR, "请求类型不正确");
+//            }
+//        }
+//
+//    }
     @Override
     public void validInterfaceInfo(InterfaceInfo interfaceInfo, boolean add) {
-
         if (null == interfaceInfo) {
             throw new BusinessException(ErrorCode.PARAMS_ERROR);
         }
-        // 第一次添加,校验参数是否参数非空
+
         if (add) {
-            Field[] declaredFields = interfaceInfo.getClass().getDeclaredFields();
-            for (Field field : declaredFields) {
-                String fieldName = field.getName();
-                if (shouldIgnoreField(fieldName)) {
-                    continue;
-                }
-                field.setAccessible(true); // 允许访问
-                try {
-                    Object value = field.get(interfaceInfo);
-                    if (null == value || value instanceof String && StringUtils.isAnyBlank((String) value)) {
-                        throw new BusinessException(ErrorCode.PARAMS_ERROR, fieldName + "不能为空");
-                    }
-                } catch (IllegalAccessException e) {
-                    throw new BusinessException(ErrorCode.SYSTEM_ERROR, "访问权限异常" + e.getMessage());
-                }
-            }
+            validateFields(interfaceInfo);
         } else {
-            // 更新 参数校验
-            if (StringUtils.isNotEmpty(interfaceInfo.getName()) && interfaceInfo.getName().length() > InterfaceInfoConstant.MAX_NAME_LENGTH) {
-                throw new BusinessException(ErrorCode.PARAMS_ERROR, "接口名称过长");
+            validateUpdateFields(interfaceInfo);
+        }
+    }
+
+    private void validateFields(InterfaceInfo interfaceInfo) {
+        Field[] declaredFields = interfaceInfo.getClass().getDeclaredFields();
+        for (Field field : declaredFields) {
+            String fieldName = field.getName();
+            if (shouldIgnoreField(fieldName)) {
+                continue;
             }
-            if (StringUtils.isNotEmpty(interfaceInfo.getUrl())) {
-                Pattern pattern = Pattern.compile(InterfaceInfoConstant.URL_REGEX);
-                if (!pattern.matcher(interfaceInfo.getUrl()).matches()) {
+            field.setAccessible(true);
+
+            try {
+                Object value = field.get(interfaceInfo);
+                if (isNullOrEmpty(value)) {
+                    throw new BusinessException(ErrorCode.PARAMS_ERROR, fieldName + "不能为空");
+                }
+                if ("name".equals(fieldName) && value.toString().length() > InterfaceInfoConstant.MAX_NAME_LENGTH) {
+                    throw new BusinessException(ErrorCode.PARAMS_ERROR, "接口名称过长");
+                }
+                if ("url".equals(fieldName) && !isValidUrl((String) value)) {
                     throw new BusinessException(ErrorCode.PARAMS_ERROR, "接口地址不正确");
                 }
-            }
-            if (StringUtils.isNotEmpty(interfaceInfo.getMethod()) && !InterfaceInfoConstant.ALLOW_METHODS.contains(interfaceInfo.getMethod())) {
-                throw new BusinessException(ErrorCode.PARAMS_ERROR, "请求类型不正确");
+                if ("method".equals(fieldName) && !InterfaceInfoConstant.ALLOW_METHODS.contains((String) value)) {
+                    throw new BusinessException(ErrorCode.PARAMS_ERROR, "请求类型不正确");
+                }
+            } catch (IllegalAccessException e) {
+                throw new BusinessException(ErrorCode.SYSTEM_ERROR, "访问权限异常" + e.getMessage());
             }
         }
+    }
 
+    private void validateUpdateFields(InterfaceInfo interfaceInfo) {
+        if (StringUtils.isNotEmpty(interfaceInfo.getName()) && interfaceInfo.getName().length() > InterfaceInfoConstant.MAX_NAME_LENGTH) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR, "接口名称过长");
+        }
+        if (StringUtils.isNotEmpty(interfaceInfo.getUrl()) && !isValidUrl(interfaceInfo.getUrl())) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR, "接口地址不正确");
+        }
+        if (StringUtils.isNotEmpty(interfaceInfo.getMethod()) && !InterfaceInfoConstant.ALLOW_METHODS.contains(interfaceInfo.getMethod())) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR, "请求类型不正确");
+        }
+    }
+
+    private boolean isNullOrEmpty(Object value) {
+        return value == null || (value instanceof String && StringUtils.isBlank((String) value));
+    }
+
+    private boolean isValidUrl(String url) {
+        Pattern pattern = Pattern.compile(InterfaceInfoConstant.URL_REGEX);
+        return pattern.matcher(url).matches();
     }
 
     @Override
