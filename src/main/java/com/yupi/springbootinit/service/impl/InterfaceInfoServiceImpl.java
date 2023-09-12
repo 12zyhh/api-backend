@@ -130,7 +130,7 @@ public class InterfaceInfoServiceImpl extends ServiceImpl<InterfaceInfoMapper, I
                     throw new BusinessException(ErrorCode.PARAMS_ERROR, "接口地址不正确");
                 }
                 if ("method".equals(fieldName) && !InterfaceInfoConstant.ALLOW_METHODS.contains((String) value)) {
-                    throw new BusinessException(ErrorCode.PARAMS_ERROR, "请求类型不正确");
+                    throw new BusinessException(ErrorCode.PARAMS_ERROR, "请求类型不正确,允许的请求类型为(GET POST PUT DELETE)");
                 }
             } catch (IllegalAccessException e) {
                 throw new BusinessException(ErrorCode.SYSTEM_ERROR, "访问权限异常" + e.getMessage());
