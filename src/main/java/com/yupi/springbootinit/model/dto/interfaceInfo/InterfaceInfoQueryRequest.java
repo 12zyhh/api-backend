@@ -20,6 +20,10 @@ import java.util.List;
 @Data
 public class InterfaceInfoQueryRequest extends PageRequest implements Serializable {
     /**
+     * 请求参数
+     */
+    private String requestParams;
+    /**
      * 主键
      */
     private Long id;

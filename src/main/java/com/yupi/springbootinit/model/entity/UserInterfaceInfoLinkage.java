@@ -1,18 +1,18 @@
 package com.yupi.springbootinit.model.entity;
 
 import com.baomidou.mybatisplus.annotation.*;
-import lombok.Data;
 
 import java.io.Serializable;
 import java.util.Date;
+import lombok.Data;
 
 /**
- * 接口信息
- * @TableName interface_info
+ * 用户接口关系表
+ * @TableName user_interface_info_linkage
  */
-@TableName(value ="interface_info")
+@TableName(value ="user_interface_info_linkage")
 @Data
-public class InterfaceInfo implements Serializable {
+public class UserInterfaceInfoLinkage implements Serializable {
     /**
      * 主键
      */
@@ -20,44 +20,29 @@ public class InterfaceInfo implements Serializable {
     private Long id;
 
     /**
-     * 名称
-     */
-    private String name;
-
-    /**
-     * 描述
-     */
-    private String description;
-
-    /**
-     * 接口地址
-     */
-    private String url;
-
-    /**
-     * 请求头
-     */
-    private String requestHeader;
-
-    /**
-     * 响应头
-     */
-    private String responseHeader;
-
-    /**
-     * 接口状态(0-关闭,1-开启)
-     */
-    private Integer status;
-
-    /**
-     * 请求类型
-     */
-    private String method;
-
-    /**
-     * 创建人
+     * 调用用户Id
      */
     private Long userId;
+
+    /**
+     * 调用接口Id
+     */
+    private Long interfaceInfoId;
+
+    /**
+     * 总调用次数
+     */
+    private Integer totalNum;
+
+    /**
+     * 剩余调用次数
+     */
+    private Integer leftNum;
+
+    /**
+     * 0-正常 1-禁用
+     */
+    private Integer status;
 
     /**
      * 创建时间
@@ -68,11 +53,6 @@ public class InterfaceInfo implements Serializable {
      * 更新时间
      */
     private Date updateTime;
-
-    /**
-     * 请求参数
-     */
-    private String requestParams;
 
     /**
      * 是否删除(0-未删,1-已删)

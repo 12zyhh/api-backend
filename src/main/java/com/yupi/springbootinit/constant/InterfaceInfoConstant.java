@@ -12,8 +12,7 @@ public interface InterfaceInfoConstant {
     /**
      * URL正则
      */
-    String URL_REGEX = "^((https?|ftp)://)?(www\\.)?([a-zA-Z0-9]+)\\.[a-zA-Z0-9]{2,}(\\.[a-zA-Z0-9]{2,})?(/[a-zA-Z0-9]+)*(/?\\?.*)?$";
-
+    String URL_REGEX = "^((https?|ftp|http)://)?(www\\.)?([a-zA-Z0-9]+(\\.[a-zA-Z0-9]+)*)?(:\\d{2,5})?(/[a-zA-Z0-9]+)*(/?\\?.*)?$";
     /**
      * 允许请求类型
      */

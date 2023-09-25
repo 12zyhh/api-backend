@@ -90,3 +90,10 @@ cos:
     secretKey: xxx
     region: xxx
     bucket: xxx
+
+
+api:
+  client:
+    access-key: zhangsan
+    secret-key: 123456
+# api

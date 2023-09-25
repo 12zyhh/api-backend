@@ -21,6 +21,11 @@ import java.util.List;
 @TableName(value ="interface_info")
 @Data
 public class InterfaceInfoVO implements Serializable {
+
+    /**
+     * 请求参数
+     */
+    private String requestParams;
     /**
      * 主键
      */

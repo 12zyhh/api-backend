@@ -13,6 +13,11 @@ import java.util.List;
 public class InterfaceInfoEditRequest implements Serializable {
 
     /**
+     * 请求参数
+     */
+    private String requestParams;
+
+    /**
      * id
      */
     private Long id;

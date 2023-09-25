@@ -3,33 +3,32 @@ package com.yupi.springbootinit.controller;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.google.gson.Gson;
 import com.yupi.springbootinit.annotation.AuthCheck;
-import com.yupi.springbootinit.common.BaseResponse;
-import com.yupi.springbootinit.common.DeleteRequest;
-import com.yupi.springbootinit.common.ErrorCode;
-import com.yupi.springbootinit.common.ResultUtils;
+import com.yupi.springbootinit.common.*;
 import com.yupi.springbootinit.constant.UserConstant;
 import com.yupi.springbootinit.exception.BusinessException;
 import com.yupi.springbootinit.exception.ThrowUtils;
 import com.yupi.springbootinit.model.dto.interfaceInfo.InterfaceInfoAddRequest;
-import com.yupi.springbootinit.model.dto.interfaceInfo.InterfaceInfoEditRequest;
+import com.yupi.springbootinit.model.dto.interfaceInfo.InterfaceInfoInvokeRequest;
 import com.yupi.springbootinit.model.dto.interfaceInfo.InterfaceInfoQueryRequest;
 import com.yupi.springbootinit.model.dto.interfaceInfo.InterfaceInfoUpdateRequest;
 import com.yupi.springbootinit.model.entity.InterfaceInfo;
 import com.yupi.springbootinit.model.entity.User;
+import com.yupi.springbootinit.model.enums.InterfaceInfoStatusEnum;
 import com.yupi.springbootinit.model.vo.InterfaceInfoVO;
 import com.yupi.springbootinit.service.InterfaceInfoService;
 import com.yupi.springbootinit.service.UserService;
+import com.zymouse.apiclientsdk.client.ApiClient;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
-import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * 帖子接口
- *
  */
 @RestController
 @RequestMapping("/interfaceInfo")
@@ -41,6 +40,9 @@ public class InterfaceInfoController {
 
     @Resource
     private UserService userService;
+
+    @Resource
+    private ApiClient apiClient;
 
     private final static Gson GSON = new Gson();
 
@@ -145,7 +147,7 @@ public class InterfaceInfoController {
      */
     @PostMapping("/list/page/vo")
     public BaseResponse<Page<InterfaceInfoVO>> listInterfaceInfoVOByPage(@RequestBody InterfaceInfoQueryRequest interfaceInfoQueryRequest,
-            HttpServletRequest request) {
+                                                                         HttpServletRequest request) {
         long current = interfaceInfoQueryRequest.getCurrent();
         long size = interfaceInfoQueryRequest.getPageSize();
         // 限制爬虫
@@ -154,81 +156,127 @@ public class InterfaceInfoController {
                 interfaceInfoService.getQueryWrapper(interfaceInfoQueryRequest));
         return ResultUtils.success(interfaceInfoService.getInterfaceInfoVOPage(interfaceInfoPage, request));
     }
-//
-//    /**
-//     * 分页获取当前用户创建的资源列表
-//     *
-//     * @param interfaceInfoQueryRequest
-//     * @param request
-//     * @return
-//     */
-//    @PostMapping("/my/list/page/vo")
-//    public BaseResponse<Page<InterfaceInfoVO>> listMyInterfaceInfoVOByPage(@RequestBody InterfaceInfoQueryRequest interfaceInfoQueryRequest,
-//            HttpServletRequest request) {
-//        if (interfaceInfoQueryRequest == null) {
-//            throw new BusinessException(ErrorCode.PARAMS_ERROR);
-//        }
-//        User loginUser = userService.getLoginUser(request);
-//        interfaceInfoQueryRequest.setUserId(loginUser.getId());
-//        long current = interfaceInfoQueryRequest.getCurrent();
-//        long size = interfaceInfoQueryRequest.getPageSize();
-//        // 限制爬虫
-//        ThrowUtils.throwIf(size > 20, ErrorCode.PARAMS_ERROR);
-//        Page<InterfaceInfo> interfaceInfoPage = interfaceInfoService.page(new Page<>(current, size),
-//                interfaceInfoService.getQueryWrapper(interfaceInfoQueryRequest));
-//        return ResultUtils.success(interfaceInfoService.getInterfaceInfoVOPage(interfaceInfoPage, request));
-//    }
-//
-//    // endregion
-//
-//    /**
-//     * 分页搜索（从 ES 查询，封装类）
-//     *
-//     * @param interfaceInfoQueryRequest
-//     * @param request
-//     * @return
-//     */
-//    @PostMapping("/search/page/vo")
-//    public BaseResponse<Page<InterfaceInfoVO>> searchInterfaceInfoVOByPage(@RequestBody InterfaceInfoQueryRequest interfaceInfoQueryRequest,
-//            HttpServletRequest request) {
-//        long size = interfaceInfoQueryRequest.getPageSize();
-//        // 限制爬虫
-//        ThrowUtils.throwIf(size > 20, ErrorCode.PARAMS_ERROR);
-//        Page<InterfaceInfo> interfaceInfoPage = interfaceInfoService.searchFromEs(interfaceInfoQueryRequest);
-//        return ResultUtils.success(interfaceInfoService.getInterfaceInfoVOPage(interfaceInfoPage, request));
-//    }
 
-//    /**
-//     * 编辑（用户）
-//     *
-//     * @param interfaceInfoEditRequest
-//     * @param request
-//     * @return
-//     */
-//    @PostMapping("/edit")
-//    public BaseResponse<Boolean> editInterfaceInfo(@RequestBody InterfaceInfoEditRequest interfaceInfoEditRequest, HttpServletRequest request) {
-//        if (interfaceInfoEditRequest == null || interfaceInfoEditRequest.getId() <= 0) {
-//            throw new BusinessException(ErrorCode.PARAMS_ERROR);
-//        }
-//        InterfaceInfo interfaceInfo = new InterfaceInfo();
-//        BeanUtils.copyProperties(interfaceInfoEditRequest, interfaceInfo);
-//        List<String> tags = interfaceInfoEditRequest.getTags();
-//        if (tags != null) {
-//            interfaceInfo.setTags(GSON.toJson(tags));
-//        }
-//        // 参数校验
-//        interfaceInfoService.validInterfaceInfo(interfaceInfo, false);
-//        User loginUser = userService.getLoginUser(request);
-//        long id = interfaceInfoEditRequest.getId();
-//        // 判断是否存在
-//        InterfaceInfo oldInterfaceInfo = interfaceInfoService.getById(id);
-//        ThrowUtils.throwIf(oldInterfaceInfo == null, ErrorCode.NOT_FOUND_ERROR);
-//        // 仅本人或管理员可编辑
-//        if (!oldInterfaceInfo.getUserId().equals(loginUser.getId()) && !userService.isAdmin(loginUser)) {
-//            throw new BusinessException(ErrorCode.NO_AUTH_ERROR);
-//        }
-//        boolean result = interfaceInfoService.updateById(interfaceInfo);
-//        return ResultUtils.success(result);
-//    }
+    @PostMapping("/online")
+    @AuthCheck(mustRole = UserConstant.ADMIN_ROLE)
+    public BaseResponse<Boolean> interfacePublish(@RequestBody IdRequest idRequest) {
+
+        // 判断参数是否为空
+        if (null == idRequest || 0 >= idRequest.getId()) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR);
+        }
+        Long id = idRequest.getId();
+
+        // 判断接口是否存在
+        InterfaceInfo oldInterfaceInfo = interfaceInfoService.getById(id);
+        ThrowUtils.throwIf(oldInterfaceInfo == null, ErrorCode.NOT_FOUND_ERROR);
+
+        // 判断接口是否可以调用
+        com.zymouse.apiclientsdk.model.User user = new com.zymouse.apiclientsdk.model.User();
+        user.setUsername("陈宗正");
+        String username = apiClient.getUsernameByPost(user);// todo 由固定方法名改名实例地址调用
+        ThrowUtils.throwIf(username == null, ErrorCode.SYSTEM_ERROR);
+
+        // 修改接口状态
+        InterfaceInfo interfaceInfo = new InterfaceInfo();
+        interfaceInfo.setId(id);
+        interfaceInfo.setStatus(Integer.valueOf(InterfaceInfoStatusEnum.ONLINE.getValue()));
+        return ResultUtils.success(interfaceInfoService.updateById(interfaceInfo));
+    }
+
+
+    @PostMapping("/offline")
+    @AuthCheck(mustRole = UserConstant.ADMIN_ROLE)
+    public BaseResponse<Boolean> interfaceOffline(@RequestBody IdRequest idRequest) {
+
+        // 判断参数是否为空
+        if (null == idRequest || 0 >= idRequest.getId()) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR);
+        }
+        Long id = idRequest.getId();
+
+        // 判断接口是否存在
+        InterfaceInfo oldInterfaceInfo = interfaceInfoService.getById(id);
+        ThrowUtils.throwIf(oldInterfaceInfo == null, ErrorCode.NOT_FOUND_ERROR);
+
+        // 判断接口是否可以调用
+        com.zymouse.apiclientsdk.model.User user = new com.zymouse.apiclientsdk.model.User();
+        user.setUsername("陈宗正");
+        String username = apiClient.getUsernameByPost(user);// todo 由固定方法名改名实例地址调用
+        ThrowUtils.throwIf(username == null, ErrorCode.SYSTEM_ERROR);
+
+        // 修改接口状态
+        InterfaceInfo interfaceInfo = new InterfaceInfo();
+        interfaceInfo.setId(id);
+        interfaceInfo.setStatus(Integer.valueOf(InterfaceInfoStatusEnum.OFFLINE.getValue()));
+        return ResultUtils.success(interfaceInfoService.updateById(interfaceInfo));
+    }
+
+
+    /**
+     * 接口测试调用
+     *
+     * @param interfaceInfoInvokeRequest
+     * @return
+     */
+    @PostMapping("/invoke")
+    @AuthCheck(mustRole = UserConstant.ADMIN_ROLE)
+    public BaseResponse<Object> interfaceInvoke(@RequestBody InterfaceInfoInvokeRequest interfaceInfoInvokeRequest
+            , HttpServletRequest httpServletRequest) {
+        ThrowUtils.throwIf(null == interfaceInfoInvokeRequest || interfaceInfoInvokeRequest.getId() <= 0
+                , ErrorCode.PARAMS_ERROR);
+        long id = interfaceInfoInvokeRequest.getId();
+        String userRequestParams = interfaceInfoInvokeRequest.getUserRequestParams();
+        InterfaceInfo interfaceInfo = interfaceInfoService.getById(id);
+        ThrowUtils.throwIf(interfaceInfo == null, ErrorCode.NOT_FOUND_ERROR);
+        ThrowUtils.throwIf(String.valueOf(InterfaceInfoStatusEnum.OFFLINE.getValue()).equals(interfaceInfo.getStatus())
+                , ErrorCode.SYSTEM_ERROR);
+        // 调用
+        User loginUser = userService.getLoginUser(httpServletRequest);
+        String accessKey = loginUser.getAccessKey();
+        String secretKey = loginUser.getSecretKey();
+        ApiClient tmpApiClient = new ApiClient(accessKey, secretKey);
+        Gson gson = new Gson();
+        com.zymouse.apiclientsdk.model.User apiClientUser = gson.fromJson(userRequestParams
+                , com.zymouse.apiclientsdk.model.User.class);
+        String response = tmpApiClient.getUsernameByPost(apiClientUser);// fixme 优化，这里目前写死 根据不同地址调用不同接口
+
+        String typePattern = "type=([^,]+)";
+        String statusPattern = "status=(\\d+)";
+        String returnMessagePattern = "<div>(.*?)</div>";
+        Pattern pattern = Pattern.compile(typePattern + ".*?" + statusPattern + ".*?" + returnMessagePattern, Pattern.DOTALL);
+        Matcher matcher = pattern.matcher(response);
+        if (matcher.find()) {
+            String type = matcher.group(1);
+            String status = matcher.group(3);
+            String returnMessage = matcher.group(2);
+            log.info("type: {} returnMessage: {} status: {}", type, status, returnMessage);
+            return ResultUtils.success(gson.toJson(new ReturnInfo(type, status, returnMessage)));
+        }
+        return ResultUtils.success(new ReturnInfo(null, null, null));
+    }
+
+    private static class ReturnInfo {
+        /**
+         * 错误类型
+         */
+        private String type;
+
+        /**
+         * 返回报文
+         */
+        private String returnMessage;
+
+        /**
+         * 返回状态
+         */
+        private String status;
+
+        public ReturnInfo(String type, String returnMessage, String status) {
+            this.type = type;
+            this.returnMessage = returnMessage;
+            this.status = status;
+        }
+    }
 
 }

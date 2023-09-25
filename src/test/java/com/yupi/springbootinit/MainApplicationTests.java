@@ -2,6 +2,8 @@ package com.yupi.springbootinit;
 
 import com.yupi.springbootinit.config.WxOpenConfig;
 import javax.annotation.Resource;
+
+import com.yupi.springbootinit.service.UserInterfaceInfoLinkageService;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 
@@ -17,9 +19,13 @@ class MainApplicationTests {
     @Resource
     private WxOpenConfig wxOpenConfig;
 
+    @Resource
+    private UserInterfaceInfoLinkageService userInterfaceInfoLinkageService;
+
     @Test
     void contextLoads() {
-        System.out.println(wxOpenConfig);
+        boolean b = userInterfaceInfoLinkageService.trackInterfaceUsageStats(1L, 1L);
+        System.out.println(b);
     }
 
 }
