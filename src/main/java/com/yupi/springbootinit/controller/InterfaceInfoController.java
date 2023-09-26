@@ -18,12 +18,16 @@ import com.yupi.springbootinit.model.vo.InterfaceInfoVO;
 import com.yupi.springbootinit.service.InterfaceInfoService;
 import com.yupi.springbootinit.service.UserService;
 import com.zymouse.apiclientsdk.client.ApiClient;
+import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
+import java.io.Serializable;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -253,10 +257,13 @@ public class InterfaceInfoController {
             log.info("type: {} returnMessage: {} status: {}", type, status, returnMessage);
             return ResultUtils.success(gson.toJson(new ReturnInfo(type, status, returnMessage)));
         }
-        return ResultUtils.success(new ReturnInfo(null, null, null));
+        return ResultUtils.success(gson.toJson(new ReturnInfo("success", response, "200")));
     }
 
-    private static class ReturnInfo {
+    @Data
+    @Getter
+    @Setter
+    public static class ReturnInfo implements Serializable {
         /**
          * 错误类型
          */
@@ -277,6 +284,8 @@ public class InterfaceInfoController {
             this.returnMessage = returnMessage;
             this.status = status;
         }
+
+        private static final long serialVersionUID = 1L;
     }
 
 }
